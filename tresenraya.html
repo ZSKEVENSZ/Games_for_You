@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tres en Raya</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #001a2e;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      user-select: none;
+      padding: 20px;
+    }
+    h1 { font-size: 28px; font-weight: 900; color: #60a5fa; text-shadow: 0 0 20px #60a5fa66; }
+    #scoreboard {
+      display: flex;
+      gap: 20px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 12px 24px;
+    }
+    .score-side { text-align: center; }
+    .score-symbol { font-size: 28px; line-height: 1; }
+    .score-name { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .score-num { font-size: 30px; font-weight: 900; }
+    .score-x .score-num { color: #60a5fa; }
+    .score-o .score-num { color: #f87171; }
+    .score-draw .score-num { color: #fbbf24; }
+    .score-divider { display: flex; align-items: center; color: rgba(255,255,255,0.2); font-size: 24px; }
+    #statusMsg {
+      font-size: 18px;
+      font-weight: bold;
+      min-height: 28px;
+      text-align: center;
+      transition: color 0.3s;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: min(90vw, 320px);
+    }
+    .cell {
+      aspect-ratio: 1;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 52px;
+      font-weight: 900;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .cell:hover:not(.taken) {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.3);
+      transform: scale(0.96);
+    }
+    .cell.x { color: #60a5fa; text-shadow: 0 0 16px #60a5fa88; }
+    .cell.o { color: #f87171; text-shadow: 0 0 16px #f8717188; }
+    .cell.win-line {
+      background: rgba(255, 215, 0, 0.15);
+      border-color: #ffd700;
+      box-shadow: 0 0 12px rgba(255,215,0,0.4);
+      animation: winPulse 0.6s ease;
+    }
+    @keyframes winPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .cell.pop-in {
+      animation: popIn 0.25s ease;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .btn-game {
+      width: 100%;
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+      border: none; color: #fff;
+      padding: 13px; border-radius: 12px;
+      font-size: 16px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+      transition: transform 0.1s;
+    }
+    .btn-game:hover { transform: scale(1.02); }
+    .btn-game:active { transform: scale(0.98); }
+    #modeSelect {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .mode-btn.active { border-color: #60a5fa; background: rgba(96,165,250,0.15); color: #60a5fa; }
+    #aiDiff {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+    .diff-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 12px;
+      background: rgba(255,255,255,0.07);
+      color: #ccc;
+      transition: all 0.2s;
+    }
+    .diff-btn.active { border-color: #f59e0b; background: rgba(245,158,11,0.15); color: #f59e0b; }
+  </style>
+</head>
+<body>
+
+  <h1>❌ Tres en Raya</h1>
+
+  <div id="scoreboard">
+    <div class="score-side score-x">
+      <div class="score-symbol">❌</div>
+      <div class="score-name">TÚ</div>
+      <div class="score-num" id="scoreX">0</div>
+    </div>
+    <div class="score-divider">|</div>
+    <div class="score-side score-draw">
+      <div class="score-symbol">🤝</div>
+      <div class="score-name">EMPATE</div>
+      <div class="score-num" id="scoreDraw">0</div>
+    </div>
+    <div class="score-divider">|</div>
+    <div class="score-side score-o">
+      <div class="score-symbol">⭕</div>
+      <div class="score-name">IA</div>
+      <div class="score-num" id="scoreO">0</div>
+    </div>
+  </div>
+
+  <div id="statusMsg">Elige un modo para empezar</div>
+
+  <div id="board">
+    <div class="cell" data-i="0" onclick="cellClick(0)"></div>
+    <div class="cell" data-i="1" onclick="cellClick(1)"></div>
+    <div class="cell" data-i="2" onclick="cellClick(2)"></div>
+    <div class="cell" data-i="3" onclick="cellClick(3)"></div>
+    <div class="cell" data-i="4" onclick="cellClick(4)"></div>
+    <div class="cell" data-i="5" onclick="cellClick(5)"></div>
+    <div class="cell" data-i="6" onclick="cellClick(6)"></div>
+    <div class="cell" data-i="7" onclick="cellClick(7)"></div>
+    <div class="cell" data-i="8" onclick="cellClick(8)"></div>
+  </div>
+
+  <div id="controls">
+    <div id="modeSelect">
+      <button class="mode-btn active" id="modeVsAI" onclick="setMode('ai')">🤖 vs IA</button>
+      <button class="mode-btn" id="modeVsP" onclick="setMode('pvp')">👥 2 Jugadores</button>
+    </div>
+    <div id="aiDiff">
+      <button class="diff-btn active" id="diffEasy" onclick="setDifficulty('easy')">😊 Fácil</button>
+      <button class="diff-btn" id="diffMed" onclick="setDifficulty('medium')">😐 Medio</button>
+      <button class="diff-btn" id="diffHard" onclick="setDifficulty('hard')">😈 Difícil</button>
+    </div>
+    <button class="btn-game" onclick="resetGame()">🔄 Nueva Partida</button>
+  </div>
+
+  <script>
+    let board = Array(9).fill(null);
+    let currentPlayer = 'X';
+    let gameOver = false;
+    let mode = 'ai';
+    let difficulty = 'easy';
+    let scores = { X: 0, O: 0, draw: 0 };
+    let bestScore = parseInt(localStorage.getItem('score_tresenraya') || '0');
+
+    const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('modeVsAI').classList.toggle('active', m === 'ai');
+      document.getElementById('modeVsP').classList.toggle('active', m === 'pvp');
+      document.getElementById('aiDiff').style.display = m === 'ai' ? 'flex' : 'none';
+      resetGame();
+    }
+
+    function setDifficulty(d) {
+      difficulty = d;
+      ['easy','med','hard'].forEach(x => document.getElementById('diff' + x.charAt(0).toUpperCase() + x.slice(1)).classList.remove('active'));
+      document.getElementById('diff' + d.charAt(0).toUpperCase() + d.slice(1)).classList.add('active');
+      resetGame();
+    }
+
+    function setStatus(msg, color) {
+      const el = document.getElementById('statusMsg');
+      el.textContent = msg;
+      el.style.color = color || '#fff';
+    }
+
+    function resetGame() {
+      board = Array(9).fill(null);
+      currentPlayer = 'X';
+      gameOver = false;
+      document.querySelectorAll('.cell').forEach(c => {
+        c.textContent = '';
+        c.className = 'cell';
+      });
+      setStatus('Turno de ❌', '#60a5fa');
+    }
+
+    function cellClick(i) {
+      if (gameOver || board[i]) return;
+      if (mode === 'ai' && currentPlayer === 'O') return;
+
+      makeMove(i, currentPlayer);
+
+      if (!gameOver && mode === 'ai' && currentPlayer === 'O') {
+        setTimeout(() => aiMove(), 300);
+      }
+    }
+
+    function makeMove(i, player) {
+      board[i] = player;
+      const cell = document.querySelector(`[data-i="${i}"]`);
+      cell.textContent = player === 'X' ? '❌' : '⭕';
+      cell.classList.add(player.toLowerCase(), 'taken', 'pop-in');
+
+      const winner = checkWin();
+      if (winner) {
+        highlightWin(winner.line);
+        gameOver = true;
+        if (winner.player === 'X') {
+          scores.X++;
+          scores.X > bestScore && (bestScore = scores.X) && localStorage.setItem('score_tresenraya', bestScore);
+          setStatus('¡Ganó ❌!', '#60a5fa');
+          try { if (window.parent && window.parent !== window && window.parent.guardarPuntuacion) window.parent.guardarPuntuacion('tresenraya', scores.X); } catch(e){}
+        } else {
+          scores.O++;
+          setStatus(mode === 'ai' ? '¡Ganó la IA ⭕!' : '¡Ganó ⭕!', '#f87171');
+        }
+        updateScoreboard();
+        return;
+      }
+      if (!board.includes(null)) {
+        gameOver = true;
+        scores.draw++;
+        setStatus('¡Empate! 🤝', '#fbbf24');
+        updateScoreboard();
+        return;
+      }
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      setStatus(
+        currentPlayer === 'X'
+          ? 'Turno de ❌'
+          : (mode === 'ai' ? 'IA pensando...' : 'Turno de ⭕'),
+        currentPlayer === 'X' ? '#60a5fa' : '#f87171'
+      );
+    }
+
+    function checkWin() {
+      for (const line of WIN_LINES) {
+        const [a, b, c] = line;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return { player: board[a], line };
+        }
+      }
+      return null;
+    }
+
+    function highlightWin(line) {
+      line.forEach(i => document.querySelector(`[data-i="${i}"]`).classList.add('win-line'));
+    }
+
+    function updateScoreboard() {
+      document.getElementById('scoreX').textContent = scores.X;
+      document.getElementById('scoreO').textContent = scores.O;
+      document.getElementById('scoreDraw').textContent = scores.draw;
+    }
+
+    // IA
+    function aiMove() {
+      if (gameOver) return;
+      let move;
+      if (difficulty === 'easy') {
+        move = easyAI();
+      } else if (difficulty === 'medium') {
+        move = Math.random() < 0.5 ? minimaxMove() : easyAI();
+      } else {
+        move = minimaxMove();
+      }
+      if (move !== undefined) makeMove(move, 'O');
+    }
+
+    function easyAI() {
+      const empty = board.reduce((a, v, i) => v === null ? [...a, i] : a, []);
+      return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    function minimaxMove() {
+      let bestVal = -Infinity, bestMove;
+      for (let i = 0; i < 9; i++) {
+        if (!board[i]) {
+          board[i] = 'O';
+          const val = minimax(board, 0, false);
+          board[i] = null;
+          if (val > bestVal) { bestVal = val; bestMove = i; }
+        }
+      }
+      return bestMove;
+    }
+
+    function minimax(b, depth, isMaximizing) {
+      const w = checkWinBoard(b);
+      if (w === 'O') return 10 - depth;
+      if (w === 'X') return depth - 10;
+      if (!b.includes(null)) return 0;
+
+      if (isMaximizing) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (!b[i]) {
+            b[i] = 'O';
+            best = Math.max(best, minimax(b, depth + 1, false));
+            b[i] = null;
+          }
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+          if (!b[i]) {
+            b[i] = 'X';
+            best = Math.min(best, minimax(b, depth + 1, true));
+            b[i] = null;
+          }
+        }
+        return best;
+      }
+    }
+
+    function checkWinBoard(b) {
+      for (const [a, bb, c] of WIN_LINES) {
+        if (b[a] && b[a] === b[bb] && b[a] === b[c]) return b[a];
+      }
+      return null;
+    }
+
+    // Iniciar
+    setStatus('Elige un modo para empezar', '#aaa');
+  </script>
+</body>
+</html>

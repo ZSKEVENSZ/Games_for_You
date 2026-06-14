@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JUEGOS ForYou – Notas</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background:
+        radial-gradient(ellipse at 10% 0%, rgba(124,58,237,0.12) 0%, transparent 50%),
+        #0b0d16;
+      min-height: 100vh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #f0f0f0;
+    }
+
+    /* Header */
+    .notes-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: rgba(11,13,22,0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.15); text-decoration: none; }
+    .header-title {
+      font-size: 18px;
+      font-weight: 900;
+      flex: 1;
+    }
+    .header-title span { color: #a855f7; }
+
+    /* Main layout */
+    .notes-main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    /* Barra de herramientas */
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .toolbar-group {
+      display: flex;
+      gap: 4px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 4px;
+    }
+    .tool-btn {
+      background: transparent;
+      border: none;
+      color: #ccc;
+      padding: 7px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .tool-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .tool-btn.danger:hover { background: rgba(248,113,113,0.15); color: #f87171; }
+
+    /* Nombre de la nota */
+    .note-name-wrap {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .note-name-wrap label {
+      font-size: 13px;
+      color: #888;
+      white-space: nowrap;
+    }
+    #noteName {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 8px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #noteName:focus { border-color: #a855f7; }
+
+    /* Editor */
+    #editor {
+      width: 100%;
+      min-height: 360px;
+      resize: vertical;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      color: #f0f0f0;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 18px 20px;
+      outline: none;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #editor:focus {
+      border-color: #a855f7;
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+    }
+    #editor::placeholder { color: #555; }
+
+    /* Contador de caracteres */
+    .char-count {
+      text-align: right;
+      font-size: 12px;
+      color: #555;
+      margin-top: 6px;
+      transition: color 0.2s;
+    }
+    .char-count.warn { color: #f59e0b; }
+
+    /* Notas guardadas */
+    .saved-section {
+      margin-top: 32px;
+    }
+    .saved-section h3 {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ccc;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .saved-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .saved-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .saved-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(168,85,247,0.3); }
+    .saved-item-icon { font-size: 20px; }
+    .saved-item-info { flex: 1; overflow: hidden; }
+    .saved-item-name {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .saved-item-meta {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .saved-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .icon-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #ccc;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .icon-btn:hover { background: rgba(248,113,113,0.15); color: #f87171; border-color: rgba(248,113,113,0.3); }
+    .icon-btn.load:hover { background: rgba(168,85,247,0.15); color: #c084fc; border-color: rgba(168,85,247,0.3); }
+
+    .empty-saved {
+      text-align: center;
+      padding: 24px;
+      color: #555;
+      font-size: 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 12px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1e2030;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #f0f0f0;
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      pointer-events: none;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+      opacity: 0;
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(74,222,128,0.4); color: #86efac; }
+    .toast.error   { border-color: rgba(248,113,113,0.4); color: #fca5a5; }
+
+    @media (max-width: 480px) {
+      .notes-main { padding: 16px 12px 50px; }
+      .toolbar { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="notes-header">
+    <a href="menu.html" class="back-btn">← Menú</a>
+    <div class="header-title">📝 Mis <span>Notas</span></div>
+  </header>
+
+  <main class="notes-main">
+
+    <!-- Nombre de la nota -->
+    <div class="note-name-wrap">
+      <label for="noteName">📌 Título:</label>
+      <input type="text" id="noteName" placeholder="Sin título" maxlength="60" />
+    </div>
+
+    <!-- Barra de herramientas -->
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button class="tool-btn" onclick="insertText('• ')">• Lista</button>
+        <button class="tool-btn" onclick="insertText('✅ ')">✅ Tarea</button>
+        <button class="tool-btn" onclick="insertText('⭐ ')">⭐ Star</button>
+        <button class="tool-btn" onclick="insertText('─────────────\n')">── Línea</button>
+      </div>
+      <div class="toolbar-group">
+        <button class="tool-btn" onclick="guardarNota()">💾 Guardar</button>
+        <button class="tool-btn" onclick="descargarTxt()">⬇️ .txt</button>
+        <button class="tool-btn" onclick="copiarTexto()">📋 Copiar</button>
+        <button class="tool-btn danger" onclick="limpiarEditor()">🗑️ Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Editor principal -->
+    <textarea id="editor" placeholder="Escribe tu nota aquí...&#10;&#10;Puedes usar los botones de arriba para insertar elementos rápidos, guardar tu nota, descargarla como archivo .txt o copiarla al portapapeles." maxlength="10000" oninput="actualizarContador()"></textarea>
+    <div class="char-count" id="charCount">0 / 10,000</div>
+
+    <!-- Notas guardadas -->
+    <div class="saved-section">
+      <h3>📂 Notas guardadas <span id="savedCount" style="color:#a855f7;font-size:12px;font-weight:600"></span></h3>
+      <div class="saved-list" id="savedList">
+        <div class="empty-saved">No tienes notas guardadas aún. ¡Escribe algo y guárdalo!</div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── Guard de sesión ──────────────────────────────────────────────
+    (function () {
+      try {
+        const s = JSON.parse(sessionStorage.getItem('foryou_sesion') || 'null');
+        if (!s) window.location.href = 'index.html';
+      } catch (e) { window.location.href = 'index.html'; }
+    })();
+
+    const NOTES_KEY = 'foryou_notas';
+    let notaActualId = null;
+
+    // ── Storage ─────────────────────────────────────────────────────
+    function getNotas() {
+      try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || []; } catch { return []; }
+    }
+    function setNotas(list) {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(list));
+    }
+
+    // ── Contador de caracteres ──────────────────────────────────────
+    function actualizarContador() {
+      const len = document.getElementById('editor').value.length;
+      const el = document.getElementById('charCount');
+      el.textContent = len.toLocaleString('es-MX') + ' / 10,000';
+      el.className = 'char-count' + (len > 8000 ? ' warn' : '');
+    }
+
+    // ── Insertar texto en el cursor ─────────────────────────────────
+    function insertText(txt) {
+      const ta = document.getElementById('editor');
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      ta.value = ta.value.slice(0, start) + txt + ta.value.slice(end);
+      ta.selectionStart = ta.selectionEnd = start + txt.length;
+      ta.focus();
+      actualizarContador();
+    }
+
+    // ── Guardar nota ────────────────────────────────────────────────
+    function guardarNota() {
+      const texto = document.getElementById('editor').value.trim();
+      const titulo = document.getElementById('noteName').value.trim() || 'Sin título';
+      if (!texto) { showToast('Escribe algo antes de guardar 📝', 'error'); return; }
+
+      const notas = getNotas();
+      const now = Date.now();
+
+      if (notaActualId) {
+        const idx = notas.findIndex(n => n.id === notaActualId);
+        if (idx !== -1) {
+          notas[idx] = { ...notas[idx], titulo, texto, modificado: now };
+          showToast('Nota actualizada ✅', 'success');
+        }
+      } else {
+        const nueva = { id: now, titulo, texto, creado: now, modificado: now };
+        notas.unshift(nueva);
+        notaActualId = nueva.id;
+        showToast('Nota guardada 💾', 'success');
+      }
+
+      setNotas(notas);
+      renderSaved();
+    }
+
+    // ── Cargar nota ─────────────────────────────────────────────────
+    function cargarNota(id) {
+      const notas = getNotas();
+      const nota = notas.find(n => n.id === id);
+      if (!nota) return;
+      document.getElementById('editor').value = nota.texto;
+      document.getElementById('noteName').value = nota.titulo;
+      notaActualId = nota.id;
+      actualizarContador();
+      document.getElementById('editor').focus();
+      showToast('Nota cargada ✏️', 'success');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ── Eliminar nota ───────────────────────────────────────────────
+    function eliminarNota(id) {
+      if (!confirm('¿Eliminar esta nota? No se puede deshacer.')) return;
+      const notas = getNotas().filter(n => n.id !== id);
+      setNotas(notas);
+      if (notaActualId === id) {
+        notaActualId = null;
+        document.getElementById('editor').value = '';
+        document.getElementById('noteName').value = '';
+        actualizarContador();
+      }
+      renderSaved();
+      showToast('Nota eliminada 🗑️');
+    }
+
+    // ── Limpiar editor ──────────────────────────────────────────────
+    function limpiarEditor() {
+      if (document.getElementById('editor').value && !confirm('¿Limpiar el editor? Los cambios sin guardar se perderán.')) return;
+      document.getElementById('editor').value = '';
+      document.getElementById('noteName').value = '';
+      notaActualId = null;
+      actualizarContador();
+      showToast('Editor limpiado');
+    }
+
+    // ── Descargar .txt ──────────────────────────────────────────────
+    function descargarTxt() {
+      const texto = document.getElementById('editor').value;
+      if (!texto.trim()) { showToast('No hay texto para descargar', 'error'); return; }
+      const titulo = document.getElementById('noteName').value.trim() || 'nota';
+      const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = titulo.replace(/[^a-zA-Z0-9áéíóúñ_ -]/g, '') + '.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Descargando archivo ⬇️', 'success');
+    }
+
+    // ── Copiar texto ────────────────────────────────────────────────
+    function copiarTexto() {
+      const texto = document.getElementById('editor').value;
+      if (!texto.trim()) { showToast('No hay texto para copiar', 'error'); return; }
+      navigator.clipboard.writeText(texto)
+        .then(() => showToast('Copiado al portapapeles 📋', 'success'))
+        .catch(() => {
+          document.getElementById('editor').select();
+          document.execCommand('copy');
+          showToast('Copiado 📋', 'success');
+        });
+    }
+
+    // ── Renderizar lista de notas guardadas ─────────────────────────
+    function renderSaved() {
+      const notas = getNotas();
+      const list = document.getElementById('savedList');
+      const count = document.getElementById('savedCount');
+
+      count.textContent = notas.length > 0 ? `(${notas.length})` : '';
+
+      if (!notas.length) {
+        list.innerHTML = '<div class="empty-saved">No tienes notas guardadas aún. ¡Escribe algo y guárdalo!</div>';
+        return;
+      }
+
+      list.innerHTML = notas.map(n => {
+        const preview = n.texto.replace(/\n/g, ' ').slice(0, 60) + (n.texto.length > 60 ? '…' : '');
+        const fecha = new Date(n.modificado).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="saved-item">
+            <div class="saved-item-icon">📝</div>
+            <div class="saved-item-info" onclick="cargarNota(${n.id})">
+              <div class="saved-item-name">${escHTML(n.titulo)}</div>
+              <div class="saved-item-meta">${escHTML(preview)} · ${fecha}</div>
+            </div>
+            <div class="saved-item-actions">
+              <button class="icon-btn load" onclick="cargarNota(${n.id})" title="Cargar">✏️</button>
+              <button class="icon-btn" onclick="eliminarNota(${n.id})" title="Eliminar">🗑️</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function escHTML(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Toast ───────────────────────────────────────────────────────
+    function showToast(msg, tipo) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (tipo || '');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── Atajos de teclado ───────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        guardarNota();
+      }
+    });
+
+    // ── Autoguardado cada 60s ───────────────────────────────────────
+    setInterval(() => {
+      const texto = document.getElementById('editor').value.trim();
+      if (texto && notaActualId) guardarNota();
+    }, 60000);
+
+    // ── Init ────────────────────────────────────────────────────────
+    renderSaved();
+    actualizarContador();
+  </script>
+</body>
+</html>

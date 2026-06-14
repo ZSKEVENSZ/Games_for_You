@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memorama</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a0d00;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      user-select: none;
+    }
+    h1 { font-size: 26px; font-weight: 900; color: #f59e0b; margin-bottom: 4px; text-shadow: 0 0 15px #f59e0b66; }
+    #topBar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat-box {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 6px 16px;
+      text-align: center;
+      min-width: 80px;
+    }
+    .stat-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-val { font-size: 20px; font-weight: bold; }
+    #board {
+      display: grid;
+      gap: 8px;
+      max-width: 440px;
+      width: 100%;
+    }
+    .card {
+      aspect-ratio: 1;
+      cursor: pointer;
+      perspective: 600px;
+      border-radius: 12px;
+    }
+    .card-inner {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.4s ease;
+      border-radius: 12px;
+    }
+    .card.flipped .card-inner, .card.matched .card-inner { transform: rotateY(180deg); }
+    .card-front, .card-back {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-front {
+      background: linear-gradient(135deg, #2d1b00, #4a2f00);
+      border: 2px solid rgba(245,158,11,0.3);
+      font-size: 28px;
+    }
+    .card-front::after {
+      content: '?';
+      font-size: 24px;
+      font-weight: bold;
+      color: rgba(245,158,11,0.5);
+    }
+    .card-back {
+      background: linear-gradient(135deg, #1a3a1a, #2d5a2d);
+      border: 2px solid rgba(255,255,255,0.2);
+      transform: rotateY(180deg);
+      font-size: clamp(20px, 5vw, 36px);
+    }
+    .card.matched .card-back {
+      background: linear-gradient(135deg, #14532d, #166534);
+      border-color: #4ade80;
+      box-shadow: 0 0 12px rgba(74,222,128,0.4);
+    }
+    .card:hover:not(.matched):not(.flipped) .card-front {
+      border-color: rgba(245,158,11,0.7);
+      background: linear-gradient(135deg, #3d2b00, #5a3f00);
+    }
+    #msgBar {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #f59e0b;
+      min-height: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 50;
+    }
+    #overlay h2 { font-size: 36px; font-weight: 900; color: #f59e0b; text-shadow: 0 0 20px #f59e0b88; }
+    #overlay p { font-size: 15px; color: #bbb; text-align: center; max-width: 260px; }
+    .score-big { font-size: 28px; color: #ffd700; font-weight: bold; }
+    .btn-game {
+      background: linear-gradient(135deg, #b45309, #f59e0b);
+      border: none; color: #fff;
+      padding: 13px 38px; border-radius: 30px;
+      font-size: 17px; font-weight: bold; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(245,158,11,0.4);
+      transition: transform 0.1s;
+    }
+    .btn-game:hover { transform: scale(1.05); }
+    .btn-game:active { transform: scale(0.97); }
+    #diffBtns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .diff-btn {
+      padding: 10px 20px; border-radius: 20px; border: none;
+      font-weight: bold; cursor: pointer; font-size: 14px;
+      transition: transform 0.1s;
+    }
+    .diff-btn:hover { transform: scale(1.05); }
+    .diff-easy { background: #166534; color: #4ade80; }
+    .diff-med { background: #92400e; color: #fcd34d; }
+    .diff-hard { background: #7f1d1d; color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <h1>🃏 Memorama</h1>
+
+  <div id="topBar">
+    <div class="stat-box">
+      <div class="stat-label">Movimientos</div>
+      <div class="stat-val" id="movVal" style="color:#f59e0b">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Pares</div>
+      <div class="stat-val" id="pairsVal" style="color:#4ade80">0/0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Tiempo</div>
+      <div class="stat-val" id="timeVal" style="color:#60a5fa">0s</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Récord</div>
+      <div class="stat-val" id="bestVal" style="color:#a78bfa">-</div>
+    </div>
+  </div>
+
+  <div id="board"></div>
+  <div id="msgBar"></div>
+
+  <div id="overlay">
+    <div style="font-size:58px">🃏</div>
+    <h2>MEMORAMA</h2>
+    <p>Encuentra todos los pares de cartas en el menor número de movimientos.</p>
+    <p style="font-weight:bold;color:#f59e0b">Elige dificultad:</p>
+    <div id="diffBtns">
+      <button class="diff-btn diff-easy" onclick="startGame(4,4)">😊 Fácil<br><small>4×4 (8 pares)</small></button>
+      <button class="diff-btn diff-med" onclick="startGame(4,6)">😤 Medio<br><small>4×6 (12 pares)</small></button>
+      <button class="diff-btn diff-hard" onclick="startGame(6,6)">😈 Difícil<br><small>6×6 (18 pares)</small></button>
+    </div>
+  </div>
+
+  <script>
+    const EMOJIS = [
+      '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼',
+      '🐨','🐯','🦁','🐮','🐷','🐸','🐵','🦋',
+      '🐙','🦀','🐬','🦄'
+    ];
+
+    let cards = [], flipped = [], matched = 0, totalPairs = 0;
+    let moves = 0, timer = 0, timerInterval = null, started = false;
+    let locked = false;
+    let bestScore = localStorage.getItem('score_memorama') ? JSON.parse(localStorage.getItem('score_memorama')) : {};
+
+    function startGame(cols, rows) {
+      const pairs = (cols * rows) / 2;
+      totalPairs = pairs;
+      moves = 0; matched = 0; timer = 0; started = false; locked = false;
+      flipped = [];
+      clearInterval(timerInterval);
+
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('msgBar').textContent = '';
+      updateUI();
+
+      // Crear pares
+      const emojis = EMOJIS.slice(0, pairs);
+      const deck = [...emojis, ...emojis];
+      // Barajar Fisher-Yates
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+
+      cards = deck.map((e, i) => ({ id: i, emoji: e, flipped: false, matched: false }));
+
+      const board = document.getElementById('board');
+      board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      board.innerHTML = '';
+
+      cards.forEach((c, i) => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = `
+          <div class="card-inner">
+            <div class="card-front"></div>
+            <div class="card-back">${c.emoji}</div>
+          </div>`;
+        el.dataset.index = i;
+        el.addEventListener('click', () => onCardClick(i));
+        board.appendChild(el);
+      });
+
+      timerInterval = setInterval(() => {
+        if (started) {
+          timer++;
+          document.getElementById('timeVal').textContent = timer + 's';
+        }
+      }, 1000);
+    }
+
+    function onCardClick(index) {
+      if (locked) return;
+      const card = cards[index];
+      if (card.flipped || card.matched) return;
+      if (!started) started = true;
+
+      card.flipped = true;
+      const el = document.querySelector(`[data-index="${index}"]`);
+      el.classList.add('flipped');
+      flipped.push(index);
+
+      if (flipped.length === 2) {
+        locked = true;
+        moves++;
+        updateUI();
+        const [a, b] = flipped;
+        if (cards[a].emoji === cards[b].emoji) {
+          // Match!
+          setTimeout(() => {
+            cards[a].matched = true;
+            cards[b].matched = true;
+            document.querySelector(`[data-index="${a}"]`).classList.add('matched');
+            document.querySelector(`[data-index="${b}"]`).classList.add('matched');
+            matched++;
+            flipped = [];
+            locked = false;
+            updateUI();
+            setMsg('✅ ¡Par encontrado!', '#4ade80');
+            if (matched === totalPairs) finishGame();
+          }, 500);
+        } else {
+          // No match
+          setTimeout(() => {
+            cards[a].flipped = false;
+            cards[b].flipped = false;
+            document.querySelector(`[data-index="${a}"]`).classList.remove('flipped');
+            document.querySelector(`[data-index="${b}"]`).classList.remove('flipped');
+            flipped = [];
+            locked = false;
+            setMsg('❌ No es par', '#f87171');
+          }, 900);
+        }
+      }
+    }
+
+    function setMsg(msg, color) {
+      const el = document.getElementById('msgBar');
+      el.textContent = msg;
+      el.style.color = color;
+      setTimeout(() => { el.textContent = ''; }, 1500);
+    }
+
+    function updateUI() {
+      document.getElementById('movVal').textContent = moves;
+      document.getElementById('pairsVal').textContent = matched + '/' + totalPairs;
+      const key = totalPairs + 'p';
+      const best = bestScore[key];
+      document.getElementById('bestVal').textContent = best ? best + ' mov' : '-';
+    }
+
+    function finishGame() {
+      clearInterval(timerInterval);
+      const key = totalPairs + 'p';
+      const prev = bestScore[key] || Infinity;
+      if (moves < prev) {
+        bestScore[key] = moves;
+        localStorage.setItem('score_memorama', JSON.stringify(bestScore));
+        try { if (window.parent && window.parent !== window && window.parent.guardarPuntuacion) window.parent.guardarPuntuacion('memorama', 1000 - moves); } catch(e){}
+      }
+
+      setTimeout(() => {
+        const isRecord = moves <= (bestScore[key] || Infinity);
+        const ov = document.getElementById('overlay');
+        ov.style.display = 'flex';
+        ov.innerHTML = `
+          <div style="font-size:54px">${isRecord ? '🏆' : '🎉'}</div>
+          <h2 style="color:#4ade80">¡GANASTE!</h2>
+          <p class="score-big">${moves} movimientos</p>
+          <p style="color:#aaa">Tiempo: ${timer}s · ${isRecord ? '¡Nuevo récord!' : 'Récord: ' + bestScore[key] + ' mov'}</p>
+          <div id="diffBtns" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px">
+            <button class="diff-btn diff-easy" onclick="startGame(4,4)">😊 Fácil</button>
+            <button class="diff-btn diff-med" onclick="startGame(4,6)">😤 Medio</button>
+            <button class="diff-btn diff-hard" onclick="startGame(6,6)">😈 Difícil</button>
+          </div>
+        `;
+      }, 400);
+    }
+  </script>
+</body>
+</html>

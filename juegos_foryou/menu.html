@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JUEGOS ForYou – Menú Principal</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="menu-body">
+
+  <!-- Header -->
+  <header class="menu-header">
+    <div class="header-left">
+      <div class="header-logo">🎮</div>
+      <div class="header-info">
+        <h1>JUEGOS <span>ForYou</span></h1>
+        <p>Colección de Juegos</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-badge">
+        <span class="user-avatar" id="userAvatar">?</span>
+        <div class="user-info">
+          <span class="user-name" id="headerUserName">Jugador</span>
+          <span class="user-level" id="headerUserLevel">Nivel 1</span>
+        </div>
+      </div>
+      <button class="btn-icon-only" onclick="cerrarSesion()" title="Cerrar sesión">🚪</button>
+    </div>
+  </header>
+
+  <!-- Sección de estadísticas rápidas -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-item">
+      <span class="stat-icon">🏆</span>
+      <span class="stat-value" id="statPuntuacion">0</span>
+      <span class="stat-label">Puntos</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-icon">🎯</span>
+      <span class="stat-value" id="statPartidas">0</span>
+      <span class="stat-label">Partidas</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-icon">⭐</span>
+      <span class="stat-value" id="statNivel">1</span>
+      <span class="stat-label">Nivel</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-icon">💰</span>
+      <span class="stat-value" id="statMonedas">0</span>
+      <span class="stat-label">Monedas</span>
+    </div>
+  </div>
+
+  <main class="menu-main">
+
+    <!-- Sección: Colección de Juegos -->
+    <section class="games-section">
+      <div class="section-header">
+        <h2>🕹️ Colección de Juegos</h2>
+        <span class="section-badge">9 juegos</span>
+      </div>
+
+      <div class="games-grid" id="gamesGrid">
+
+        <div class="game-card" onclick="abrirJuego('carrera')" id="card-carrera">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">🏎️</div>
+            <h3>Carreras de Autos</h3>
+            <p>Esquiva el tráfico a máxima velocidad</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-carrera">Mejor: 0</span>
+              <span class="game-tag">Acción</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+        <div class="game-card" onclick="abrirJuego('spaceinvaders')" id="card-spaceinvaders">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #0d0d0d, #1a0033, #2d0066);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">👾</div>
+            <h3>Space Invaders</h3>
+            <p>Defiende la Tierra de la invasión alienígena</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-spaceinvaders">Mejor: 0</span>
+              <span class="game-tag">Shooter</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+        <div class="game-card" onclick="abrirJuego('snake')" id="card-snake">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #0a1628, #1b3a1b, #0d2b0d);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">🐍</div>
+            <h3>La Serpiente Clásica</h3>
+            <p>Crece sin chocar con las paredes</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-snake">Mejor: 0</span>
+              <span class="game-tag">Clásico</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+        <div class="game-card" onclick="abrirJuego('pingpong')" id="card-pingpong">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #1a0a2e, #2d1b4e, #1a0a2e);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">🏓</div>
+            <h3>Ping Pong</h3>
+            <p>Clásico duelo de paletas contra la IA</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-pingpong">Mejor: 0</span>
+              <span class="game-tag">Deportes</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+        <div class="game-card" onclick="abrirJuego('memorama')" id="card-memorama">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #2e1a00, #4e2d00, #2e1a00);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">🃏</div>
+            <h3>Memorama</h3>
+            <p>Encuentra los pares en el menor tiempo</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-memorama">Mejor: 0</span>
+              <span class="game-tag">Memoria</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+        <div class="game-card" onclick="abrirJuego('buscaminas')" id="card-buscaminas">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #2b2b2b, #3b1a1a, #4b0d0d);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">💣</div>
+            <h3>Buscaminas</h3>
+            <p>Descubre el tablero sin activar las minas</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-buscaminas">Mejor: 0</span>
+              <span class="game-tag">Lógica</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+        <div class="game-card" onclick="abrirJuego('rompecabezas')" id="card-rompecabezas">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #10202d, #1b2d42, #134069);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">🧩</div>
+            <h3>Rompecabezas</h3>
+            <p>Ordena las piezas para reconstruir el tablero completo</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-rompecabezas">Mejor: 0</span>
+              <span class="game-tag">Lógica</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+        <div class="game-card" onclick="abrirJuego('sopa')" id="card-sopa">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #2d1a4e, #381f6d, #2d1a4e);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">🔤</div>
+            <h3>Sopa de Letras</h3>
+            <p>Encuentra palabras escondidas en el tablero</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-sopa">Mejor: 0</span>
+              <span class="game-tag">Letras</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+        <div class="game-card" onclick="abrirJuego('tresenraya')" id="card-tresenraya">
+          <div class="game-card-bg" style="background: linear-gradient(135deg, #001a2e, #00304e, #001a2e);"></div>
+          <div class="game-card-content">
+            <div class="game-icon">❌</div>
+            <h3>Tres en Raya</h3>
+            <p>El clásico juego del gato contra la IA</p>
+            <div class="game-meta">
+              <span class="game-score" id="score-tresenraya">Mejor: 0</span>
+              <span class="game-tag">Estrategia</span>
+            </div>
+          </div>
+          <div class="game-card-hover">
+            <span>¡JUGAR!</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Sección: Juegos Extra -->
+    <section class="extra-section">
+      <div class="section-header">
+        <h2>⚔️ Juegos Extra</h2>
+        <span class="section-badge">Especiales</span>
+      </div>
+
+      <div class="extra-grid">
+
+        <div class="extra-card" onclick="window.location.href='pelea.html'">
+          <div class="extra-card-icon">⚔️</div>
+          <div class="extra-card-info">
+            <h3>Juego de Pelea RPG</h3>
+            <p>Mini RPG con niveles, tienda, jefes y más</p>
+            <div class="extra-tags">
+              <span class="tag tag-red">RPG</span>
+              <span class="tag tag-orange">Turnos</span>
+              <span class="tag tag-purple">Jefe Final</span>
+            </div>
+          </div>
+          <div class="extra-card-arrow">▶</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Sección: Notas y Mensajes -->
+    <section class="notes-section">
+      <div class="section-header">
+        <h2>📝 Deja tu Opinión</h2>
+      </div>
+
+      <div class="notes-card" onclick="window.location.href='notas.html'">
+        <span class="notes-icon">✍️</span>
+        <div class="notes-info">
+          <h3>Escribe y guarda tu mensaje</h3>
+          <p>Guarda tus notas o descárgalas como archivo .txt</p>
+        </div>
+        <span class="notes-arrow">→</span>
+      </div>
+    </section>
+
+    <!-- Tabla de puntuaciones -->
+    <section class="scores-section">
+      <div class="section-header">
+        <h2>🏆 Mis Mejores Puntuaciones</h2>
+        <div class="section-actions">
+          <button class="btn-small" onclick="imprimirPuntuaciones()">Imprimir</button>
+          <button class="btn-small" onclick="limpiarPuntuaciones()">Resetear</button>
+        </div>
+      </div>
+      <div class="scores-table-wrap">
+        <table class="scores-table" id="scoresTable">
+          <thead>
+            <tr>
+              <th>Juego</th>
+              <th>Puntuación</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="scoresBody">
+            <tr><td colspan="3" class="no-scores">Aún no hay puntuaciones guardadas</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="menu-footer">
+    <p>🎮 JUEGOS ForYou &copy; 2026 · Hecho con ❤️ por VaidrollTeam</p>
+  </footer>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/menu.js"></script>
+</body>
+</html>

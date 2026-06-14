@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sudoku 4x4</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #071e3d; min-height: 100vh; color: #eef2ff; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    header { width: 100%; max-width: 480px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .back-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); padding: 10px 14px; border-radius: 12px; color: #eef2ff; text-decoration: none; font-weight: 700; }
+    h1 { font-size: 28px; margin-bottom: 8px; text-align: center; width: 100%; }
+    .info { max-width: 480px; text-align: center; color: #cbd5e1; margin-bottom: 18px; }
+    #board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: min(100%, 420px); }
+    .cell { position: relative; padding-top: 100%; border-radius: 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); overflow: hidden; }
+    .cell-inner { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; font-weight: 900; }
+    .cell input { width: 100%; height: 100%; border: none; background: transparent; color: #eef2ff; font-size: 28px; font-weight: 900; text-align: center; outline: none; }
+    .cell.prefilled { background: rgba(255,255,255,0.12); }
+    .cell.prefilled .cell-inner { color: #93c5fd; }
+    .cell.error { box-shadow: inset 0 0 0 3px rgba(248,113,113,0.35); }
+    .grid-line { border-color: rgba(255,255,255,0.25); }
+    .row-2 .cell, .col-2 .cell { border-width: 2px; }
+    .stats { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
+    .stat { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 10px 14px; min-width: 110px; text-align: center; }
+    .stat strong { font-size: 20px; display: block; margin-bottom: 4px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .btn { background: linear-gradient(135deg,#0ea5e9,#818cf8); border: none; color: #fff; border-radius: 14px; padding: 12px 18px; font-weight: 700; cursor: pointer; transition: transform 0.1s, filter 0.2s; }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: scale(0.98); }
+    .message { margin-top: 14px; color: #cbd5e1; min-height: 22px; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="menu.html" class="back-btn">← Menú</a>
+    <h1>🔢 Sudoku 4x4</h1>
+  </header>
+  <p class="info">Completa la cuadrícula sin repetir números en filas, columnas y bloques. Un juego de pensamiento rápido y entretenido.</p>
+
+  <div class="stats">
+    <div class="stat"><strong id="filledCount">0</strong> Completadas</div>
+    <div class="stat"><strong id="remainingCount">16</strong> Restantes</div>
+    <div class="stat"><strong id="bestVal">0</strong> Récord</div>
+  </div>
+  <div id="board"></div>
+  <div class="message" id="message">Empieza a escribir un número del 1 al 4.</div>
+  <div class="actions">
+    <button class="btn" id="resetBtn">Nuevo tablero</button>
+    <button class="btn" id="checkBtn">Verificar</button>
+  </div>
+
+  <script>
+    const PRESET = [
+      [1,null,null,4],[null,4,1,null],[null,1,4,null],[3,null,null,2],
+      [null,2,null,1],[4,null,2,null],[null,3,null,4],[2,null,null,3]
+    ];
+    let board = [];
+    let bestScore = parseInt(localStorage.getItem('score_sudoku') || '0');
+    const bestValEl = document.getElementById('bestVal');
+    const filledCountEl = document.getElementById('filledCount');
+    const remainingCountEl = document.getElementById('remainingCount');
+    bestValEl.textContent = bestScore;
+
+    function init() {
+      board = PRESET.map(row => row.map(value => ({ value, fixed: !!value, error: false })));
+      render();
+      updateCounters();
+      document.getElementById('message').textContent = 'Empieza a escribir un número del 1 al 4.';
+    }
+
+    function render() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+      boardEl.style.gridTemplateColumns = 'repeat(4, minmax(70px, 1fr))';
+      board.forEach((row, r) => {
+        row.forEach((cell, c) => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'cell' + (cell.fixed ? ' prefilled' : '') + (cell.error ? ' error' : '');
+          if (r === 1) wrapper.classList.add('row-2');
+          if (c === 1) wrapper.classList.add('col-2');
+          const inner = document.createElement('div');
+          inner.className = 'cell-inner';
+          if (cell.fixed) {
+            inner.textContent = cell.value;
+          } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.maxLength = 1;
+            input.value = cell.value || '';
+            input.oninput = e => onInput(r,c,e.target.value);
+            input.onfocus = () => { cell.error = false; wrapper.classList.remove('error'); };
+            inner.appendChild(input);
+          }
+          wrapper.appendChild(inner);
+          boardEl.appendChild(wrapper);
+        });
+      });
+    }
+
+    function onInput(r,c,value) {
+      const num = parseInt(value.replace(/[^1-4]/g, ''));
+      board[r][c].value = isNaN(num) ? null : num;
+      render();
+      updateCounters();
+    }
+
+    function updateCounters() {
+      const filled = board.flat().filter(cell => cell.value).length;
+      filledCountEl.textContent = filled;
+      remainingCountEl.textContent = 16 - filled;
+    }
+
+    function checkBoard() {
+      let valid = true;
+      board.flat().forEach(cell => cell.error = false);
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const cell = board[r][c];
+          if (!cell.value) { valid = false; continue; }
+          if (!validCell(r,c,cell.value)) { cell.error = true; valid = false; }
+        }
+      }
+      render();
+      if (valid && board.flat().every(cell => cell.value)) {
+        const score = 400 - (16 - board.flat().filter(c => c.value).length) * 10;
+        document.getElementById('message').textContent = '¡Correcto! Puntuación: ' + score;
+        if (score > bestScore) { bestScore = score; localStorage.setItem('score_sudoku', score); bestValEl.textContent = bestScore; }
+        try { if (window.parent && window.parent !== window && window.parent.guardarPuntuacion) window.parent.guardarPuntuacion('sudoku', score); } catch(e){}
+      } else {
+        document.getElementById('message').textContent = 'Corrige los errores marcados y completa todas las celdas.';
+      }
+    }
+
+    function validCell(r,c,value) {
+      for (let i = 0; i < 4; i++) {
+        if (i !== c && board[r][i].value === value) return false;
+        if (i !== r && board[i][c].value === value) return false;
+      }
+      const br = Math.floor(r/2)*2; const bc = Math.floor(c/2)*2;
+      for (let dr = 0; dr < 2; dr++) {
+        for (let dc = 0; dc < 2; dc++) {
+          const rr = br + dr; const cc = bc + dc;
+          if (rr === r && cc === c) continue;
+          if (board[rr][cc].value === value) return false;
+        }
+      }
+      return true;
+    }
+
+    document.getElementById('resetBtn').onclick = init;
+    document.getElementById('checkBtn').onclick = checkBoard;
+    init();
+  </script>
+</body>
+</html>

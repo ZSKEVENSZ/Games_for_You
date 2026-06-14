@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rompecabezas</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0b1221, #101f3d);
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    header {
+      width: min(100%, 520px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.16);
+      color: #f8fafc;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    h1 {
+      flex: 1;
+      text-align: center;
+      font-size: clamp(26px, 4vw, 36px);
+      margin: 0;
+    }
+    .info {
+      max-width: 520px;
+      text-align: center;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .game-panel {
+      width: min(520px, 100%);
+      display: grid;
+      gap: 16px;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(68px, 1fr));
+      gap: 10px;
+      background: rgba(255,255,255,0.04);
+      padding: 10px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 20px 80px rgba(0,0,0,0.25);
+    }
+    .tile {
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      cursor: pointer;
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      background: linear-gradient(135deg, #7c3aed, #38bdf8);
+      border: 2px solid rgba(255,255,255,0.18);
+      transition: transform 0.15s ease, background 0.15s ease;
+      user-select: none;
+    }
+    .tile:hover { transform: translateY(-2px); }
+    .tile.empty {
+      background: rgba(255,255,255,0.04);
+      border: 2px dashed rgba(255,255,255,0.16);
+      cursor: default;
+    }
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 12px 16px;
+      min-width: 120px;
+      text-align: center;
+    }
+    .stat strong { display: block; font-size: 22px; margin-bottom: 4px; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    .btn { background: linear-gradient(135deg,#38bdf8,#7c3aed); border: none; color: #fff; border-radius: 14px; padding: 12px 18px; font-weight: 700; cursor: pointer; transition: transform .15s, filter .2s; }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:active { transform: scale(0.98); }
+    .message {
+      text-align: center;
+      color: #cbd5e1;
+      min-height: 26px;
+      font-size: 15px;
+    }
+    @media (max-width: 420px) {
+      #board { gap: 8px; }
+      .tile { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="menu.html" class="back-btn">← Menú</a>
+    <h1>🧩 Rompecabezas</h1>
+  </header>
+  <p class="info">Desliza las piezas hasta completar el tablero. Cada movimiento cuenta, así que piénsalo bien antes de tocar la pieza.</p>
+
+  <div class="game-panel">
+    <div class="stats">
+      <div class="stat"><strong id="movesCount">0</strong> Movimientos</div>
+      <div class="stat"><strong id="timeCount">0s</strong> Tiempo</div>
+      <div class="stat"><strong id="bestScore">0</strong> Mejor</div>
+    </div>
+
+    <div id="board"></div>
+
+    <div class="controls">
+      <button class="btn" id="shuffleBtn">Mezclar</button>
+      <button class="btn" id="solveBtn">Resolver</button>
+    </div>
+
+    <div class="message" id="message">Toca una pieza adyacente al espacio vacío para moverla.</div>
+  </div>
+
+  <script>
+    const SIZE = 4;
+    let board = [];
+    let blank = { r: 3, c: 3 };
+    let moves = 0;
+    let seconds = 0;
+    let timer;
+    let started = false;
+    let bestScore = parseInt(localStorage.getItem('score_rompecabezas') || '0');
+
+    const boardEl = document.getElementById('board');
+    const movesEl = document.getElementById('movesCount');
+    const timeEl = document.getElementById('timeCount');
+    const bestEl = document.getElementById('bestScore');
+    const messageEl = document.getElementById('message');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const solveBtn = document.getElementById('solveBtn');
+
+    bestEl.textContent = bestScore;
+
+    function createSolved() {
+      board = [];
+      let value = 1;
+      for (let r = 0; r < SIZE; r++) {
+        const row = [];
+        for (let c = 0; c < SIZE; c++) {
+          row.push(value < SIZE * SIZE ? value++ : 0);
+        }
+        board.push(row);
+      }
+      blank = { r: SIZE - 1, c: SIZE - 1 };
+    }
+
+    function shuffleBoard(steps = 120) {
+      const directions = [ {r:1,c:0}, {r:-1,c:0}, {r:0,c:1}, {r:0,c:-1} ];
+      for (let i = 0; i < steps; i++) {
+        const options = directions.filter(d => {
+          const nr = blank.r + d.r;
+          const nc = blank.c + d.c;
+          return nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE;
+        });
+        const move = options[Math.floor(Math.random() * options.length)];
+        const tr = blank.r + move.r;
+        const tc = blank.c + move.c;
+        board[blank.r][blank.c] = board[tr][tc];
+        board[tr][tc] = 0;
+        blank = { r: tr, c: tc };
+      }
+    }
+
+    function render() {
+      boardEl.innerHTML = '';
+      board.forEach((row, r) => {
+        row.forEach((value, c) => {
+          const tile = document.createElement('div');
+          tile.className = 'tile' + (value === 0 ? ' empty' : '');
+          tile.textContent = value === 0 ? '' : value;
+          if (value !== 0) {
+            tile.addEventListener('click', () => attemptMove(r, c));
+          }
+          boardEl.appendChild(tile);
+        });
+      });
+      movesEl.textContent = moves;
+      timeEl.textContent = seconds + 's';
+    }
+
+    function attemptMove(r, c) {
+      if (Math.abs(blank.r - r) + Math.abs(blank.c - c) !== 1) return;
+      board[blank.r][blank.c] = board[r][c];
+      board[r][c] = 0;
+      blank = { r, c };
+      moves += 1;
+      if (!started) startTimer();
+      render();
+      if (checkSolved()) {
+        endGame();
+      }
+    }
+
+    function checkSolved() {
+      let value = 1;
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (r === SIZE - 1 && c === SIZE - 1) return board[r][c] === 0;
+          if (board[r][c] !== value++) return false;
+        }
+      }
+      return true;
+    }
+
+    function startTimer() {
+      started = true;
+      timer = setInterval(() => {
+        seconds += 1;
+        timeEl.textContent = seconds + 's';
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
+      started = false;
+    }
+
+    function endGame() {
+      stopTimer();
+      const score = Math.max(20, 1200 - moves * 10 - seconds * 8);
+      messageEl.textContent = `¡Perfecto! Terminaste en ${moves} movimientos y ${seconds}s. Puntuación: ${score}`;
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('score_rompecabezas', bestScore);
+        bestEl.textContent = bestScore;
+      }
+      try {
+        if (window.parent && window.parent !== window && window.parent.guardarPuntuacion) {
+          window.parent.guardarPuntuacion('rompecabezas', score);
+        }
+      } catch (e) {}
+    }
+
+    function startGame() {
+      createSolved();
+      shuffleBoard();
+      moves = 0;
+      seconds = 0;
+      stopTimer();
+      messageEl.textContent = 'Toca una pieza adyacente al espacio vacío para moverla.';
+      render();
+    }
+
+    function solveGame() {
+      createSolved();
+      moves = 0;
+      seconds = 0;
+      stopTimer();
+      render();
+      messageEl.textContent = 'Tablero resuelto. ¡Intenta mezclar y jugar tú mismo!';
+    }
+
+    document.addEventListener('keydown', (event) => {
+      const key = event.key;
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(key)) {
+        event.preventDefault();
+        let target;
+        if (key === 'ArrowUp' && blank.r < SIZE - 1) target = { r: blank.r + 1, c: blank.c };
+        if (key === 'ArrowDown' && blank.r > 0) target = { r: blank.r - 1, c: blank.c };
+        if (key === 'ArrowLeft' && blank.c < SIZE - 1) target = { r: blank.r, c: blank.c + 1 };
+        if (key === 'ArrowRight' && blank.c > 0) target = { r: blank.r, c: blank.c - 1 };
+        if (target) attemptMove(target.r, target.c);
+      }
+    });
+
+    shuffleBtn.addEventListener('click', startGame);
+    solveBtn.addEventListener('click', solveGame);
+
+    startGame();
+  </script>
+</body>
+</html>
